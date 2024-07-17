@@ -1,7 +1,8 @@
-from kiwibank_api import KiwiBankApi
+from kiwibank_api import KiwibankApi
 
 import time
 import logging
+import datetime
 
 
 """
@@ -22,9 +23,11 @@ if __name__ == "__main__":
     }
 
     # CSV extract informations
-    dateFrom = todayDate = "1/6/2024"
-    dateTo = todayDate = str(time.strftime("%d/%m/%Y"))
-    accountPath = "/accounts/view/123456789ABCDEF123456789ABCDEF12"
+    accountId = "123456789ABCDEF123456789ABCDEF12"
+    accountType = "" # "credit-card"
+    
+    dateFrom = str((datetime.datetime.today() - datetime.timedelta(days=7)).strftime("%d/%m/%Y"))
+    dateTo = str(datetime.datetime.today().strftime("%d/%m/%Y"))
 
     # Logging stuff
     logger = logging.getLogger()
@@ -36,11 +39,11 @@ if __name__ == "__main__":
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-    kbApi = KiwiBankApi()
+    kbApi = KiwibankApi()
 
     kbApi.login(user, password)
     kbApi.resolveChallenge(questionsAnswers)
-    csvTxt = kbApi.extractCSV(accountPath, dateFrom, dateTo)
+    csvTxt = kbApi.extractCSV(accountId, accountType, dateFrom, dateTo)
     kbApi.logout()
 
     csvLines = csvTxt.split("\n")

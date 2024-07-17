@@ -3,7 +3,7 @@ import logging
 from bs4 import BeautifulSoup
 
 
-class KiwiBankApi(object):
+class KiwibankApi(object):
 
     def __init__(self):
         self.session = requests.Session()
@@ -95,11 +95,14 @@ class KiwiBankApi(object):
         soup = BeautifulSoup(self.retRequest.content, "html.parser")
         self.logger.debug(soup.prettify())
 
-    def extractCSV(self, accountPath, dateFrom, dateTo):
+    def extractCSV(self, accountId, accountType, dateFrom, dateTo):
         self.logger.info("Extracting CSV file...")
+        
+        accountUrl = '/'.join(filter(None, ["/accounts/view", accountType, accountId]))
+        
         # Make a first get to the account to init html page
         self.retRequest = self.session.get(
-            "https://www.ib.kiwibank.co.nz" + accountPath
+            "https://www.ib.kiwibank.co.nz" + accountUrl
         )
 
         soup = BeautifulSoup(self.retRequest.content, "html.parser")
@@ -117,7 +120,7 @@ class KiwiBankApi(object):
             ("__VSTATE", vstate),
             ("__VIEWSTATE", ""),
             ("__EVENTVALIDATION", eventvalidation),
-            ("ctl00$c$TransactionSearchControl$AccountList", accountPath),
+            ("ctl00$c$TransactionSearchControl$AccountList", accountUrl),
             ("ctl00$c$TransactionSearchControl$DualDateSelector$initialDate$TextBox", dateFrom),
             ("ctl00$c$TransactionSearchControl$DualDateSelector$FromDateRegex_Highlight_ClientState", "VALID"),
             ("ctl00$c$TransactionSearchControl$DualDateSelector$FromDateTextBoxExtender_ClientState", "VALID"),
@@ -184,7 +187,7 @@ class KiwiBankApi(object):
         ]
 
         self.retRequest = self.session.post(
-            "https://www.ib.kiwibank.co.nz" + accountPath, data=data
+            "https://www.ib.kiwibank.co.nz" + accountUrl, data=data
         )
 
         self.logger.debug("CSV file :\n\n" + str(self.retRequest.content) + "\n")
