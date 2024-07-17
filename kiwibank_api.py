@@ -2,213 +2,198 @@ import requests
 import logging
 from bs4 import BeautifulSoup
 
+
 class KiwiBankApi(object):
 
     def __init__(self):
         self.session = requests.Session()
         self.logger = logging.getLogger()
         self.retRequest = None
-        
-        
-    def login(self, login, password):   
+
+    def login(self, login, password):
         self.logger.info("Login attempt...")
-        
-        self.retRequest = self.session.get('https://www.ib.kiwibank.co.nz/login/')
-        
-        soup = BeautifulSoup(self.retRequest.content, 'html.parser')        
-        self.logger.debug(soup.prettify())        
-         
-        vstate = soup.find(id="__VSTATE")['value']
-        eventvalidation = soup.find(id="__EVENTVALIDATION")['value']
+
+        self.retRequest = self.session.get("https://www.ib.kiwibank.co.nz/login/")
+
+        soup = BeautifulSoup(self.retRequest.content, "html.parser")
+        self.logger.debug(soup.prettify())
+
+        vstate = soup.find(id="__VSTATE")["value"]
+        eventvalidation = soup.find(id="__EVENTVALIDATION")["value"]
 
         data = [
-          ('__LASTFOCUS', ''),
-          ('__EVENTTARGET', 'ctl00$c$ProgressFinalSubmit$FinalStepButton'),
-          ('__EVENTARGUMENT', ''),
-          ('__VSTATE', vstate),
-          ('__VIEWSTATE', ''),
-          ('__EVENTVALIDATION', eventvalidation),
-          ('ctl00$c$IESError', ''),
-          ('ctl00$c$ciam', ''),
-          ('ctl00$c$txtUserName', login),
-          ('ctl00$c$txtPassword', password),
+            ("__LASTFOCUS", ""),
+            ("__EVENTTARGET", "ctl00$c$ProgressFinalSubmit$FinalStepButton"),
+            ("__EVENTARGUMENT", ""),
+            ("__VSTATE", vstate),
+            ("__VIEWSTATE", ""),
+            ("__EVENTVALIDATION", eventvalidation),
+            ("ctl00$c$IESError", ""),
+            ("ctl00$c$ciam", ""),
+            ("ctl00$c$txtUserName", login),
+            ("ctl00$c$txtPassword", password),
         ]
-        
-        self.retRequest = self.session.post('https://www.ib.kiwibank.co.nz/login/', data=data)
-        
-        soup = BeautifulSoup(self.retRequest.content, 'html.parser')
-        self.logger.debug(soup.prettify()) 
-        
-            
 
-    
-    
-    
-    def resolveChallenge(self,questionsAnswers):  
-        self.logger.info("Resolving challenge...")      
-        
-        soup = BeautifulSoup(self.retRequest.content, 'html.parser')
-        question = soup.find(id="question").find_all('div')[1].string
-        
-        self.logger.info( 'Question is : ' + question)
-        
+        self.retRequest = self.session.post(
+            "https://www.ib.kiwibank.co.nz/login/", data=data
+        )
+
+        soup = BeautifulSoup(self.retRequest.content, "html.parser")
+        self.logger.debug(soup.prettify())
+
+    def resolveChallenge(self, questionsAnswers):
+        self.logger.info("Resolving challenge...")
+
+        soup = BeautifulSoup(self.retRequest.content, "html.parser")
+        question = soup.find(id="question").find_all("div")[1].string
+
+        self.logger.info("Question is : " + question)
+
         for k in questionsAnswers.keys():
-            if(question == k):
+            if question == k:
                 reponse = questionsAnswers[k]
                 break
 
-        
-        answers = soup.find(id="answer").find_all('div')[1:]
-        
+        answers = soup.find(id="answer").find_all("div")[1:]
+
         index = []
-        
+
         challenge = ""
         i = 0
         for div in answers:
-            if('required' in str(div)):
+            if "required" in str(div):
                 index.append(i)
                 challenge = challenge + "O"
             else:
                 challenge = challenge + "X"
             i = i + 1
-        
-        letter1 = str(reponse[index[0]]) 
-        letter2 = str(reponse[index[1]]) 
-        
-        self.logger.info('Challenge is : ' + challenge) 
-        self.logger.info('Response : letter 1: ' + letter1 + ' letter 2: ' + letter2)
 
+        letter1 = str(reponse[index[0]])
+        letter2 = str(reponse[index[1]])
 
-        vstate = soup.find(id="__VSTATE")['value']
-        eventvalidation = soup.find(id="__EVENTVALIDATION")['value']
-        
-        
+        self.logger.info("Challenge: " + challenge)
+        self.logger.info("Letter 1: " + letter1)
+        self.logger.info("Letter 2: " + letter2)
+
+        vstate = soup.find(id="__VSTATE")["value"]
+        eventvalidation = soup.find(id="__EVENTVALIDATION")["value"]
+
         data = [
-          ('__EVENTTARGET', 'ctl00$c$ChallengeControl$SubmitAnswer$FinalStepButton'),
-          ('__EVENTARGUMENT', ''),
-          ('__VSTATE', vstate),
-          ('__VIEWSTATE', ''),
-          ('__EVENTVALIDATION', eventvalidation),
-          ('letter1', letter1),
-          ('letter2', letter2),
+            ("__EVENTTARGET", "ctl00$c$ChallengeControl$SubmitAnswer$FinalStepButton"),
+            ("__EVENTARGUMENT", ""),
+            ("__VSTATE", vstate),
+            ("__VIEWSTATE", ""),
+            ("__EVENTVALIDATION", eventvalidation),
+            ("letter1", letter1),
+            ("letter2", letter2),
         ]
-        
-        self.retRequest = self.session.post('https://www.ib.kiwibank.co.nz/keepsafe/challenge/', data=data)
-        
-        
-        
-        soup = BeautifulSoup(self.retRequest.content, 'html.parser')            
-        self.logger.debug(soup.prettify()) 
-        
-        
-        
-    def extractCSV(self,accountPath,dateFrom,dateTo):
-        self.logger.info("Extracting CSV file...") 
-        #Make a first get to the account to init html page
-        self.retRequest = self.session.get('https://www.ib.kiwibank.co.nz' + accountPath)
-    
-    
-        soup = BeautifulSoup(self.retRequest.content, 'html.parser')
-        self.logger.debug(soup.prettify()) 
-    
 
+        self.retRequest = self.session.post(
+            "https://www.ib.kiwibank.co.nz/keepsafe/challenge/", data=data
+        )
 
-        requestVerificationToken = soup.find(id="__RequestVerificationToken")['value']
-        vstate = soup.find(id="__VSTATE")['value']
-        eventvalidation = soup.find(id="__EVENTVALIDATION")['value']
-    
-        
-        
+        soup = BeautifulSoup(self.retRequest.content, "html.parser")
+        self.logger.debug(soup.prettify())
+
+    def extractCSV(self, accountPath, dateFrom, dateTo):
+        self.logger.info("Extracting CSV file...")
+        # Make a first get to the account to init html page
+        self.retRequest = self.session.get(
+            "https://www.ib.kiwibank.co.nz" + accountPath
+        )
+
+        soup = BeautifulSoup(self.retRequest.content, "html.parser")
+        self.logger.debug(soup.prettify())
+
+        requestVerificationToken = soup.find(id="__RequestVerificationToken")["value"]
+        vstate = soup.find(id="__VSTATE")["value"]
+        eventvalidation = soup.find(id="__EVENTVALIDATION")["value"]
+
         data = [
-          ('__RequestVerificationToken', requestVerificationToken),
-          ('__EVENTTARGET', 'ctl00$c$TransactionSearchControl$ActionButton'),
-          ('__EVENTARGUMENT', ''),
-          ('__LASTFOCUS', ''),
-          ('__VSTATE', vstate),
-          ('__VIEWSTATE', ''),
-          ('__EVENTVALIDATION', eventvalidation),
-          ('ctl00$c$TransactionSearchControl$AccountList', accountPath),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$initialDate$TextBox', dateFrom),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$FromDateRegex_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$FromDateTextBoxExtender_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$FromDateRegex_ShowError_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$InitialDateNotFuture_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$InitialDateNotFutureTextBoxExtender_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$InitialDateNotFuture_ShowError_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$FromHistoryLimit_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$FromHistoryLimitExtender_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$FromHistoryLimit_ShowError_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$finalDate$TextBox', dateTo),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$ToDateRegex_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$FinalDateTextBoxExtender_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$ToDateRegex_ShowError_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$DateRangeValidity_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$DateRangeValidityExtender_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$DateRangeValidity_ShowError_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$FutureDate_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$FinalDateNotFutureExtender_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$FutureDate_ShowError_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$ToDateHistoryLimit_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$ToDateHistoryLimitExtender_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$ToDateHistoryLimit_ShowError_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$DateRangeLimitValidator_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$DateRangeLimitValidatorExtender_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DualDateSelector$DateRangeLimitValidator_ShowError_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$AmountRange$TransactionAmountLowerBoundField', ''),
-          ('ctl00$c$TransactionSearchControl$AmountRange$LowerBoundRegex_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$AmountRange$LowerBoundTextFieldExtender_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$AmountRange$LowerBoundRegex_ShowError_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$AmountRange$TransactionAmountUpperBoundField', ''),
-          ('ctl00$c$TransactionSearchControl$AmountRange$UpperBoundRegex_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$AmountRange$UpperBoundTextFieldExtender_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$AmountRange$UpperBoundRegex_ShowError_ClientState', 'VALID'),
-          ('ctl00$c$TransactionSearchControl$DWGroup', 'DepositsAndWithdrawals'),
-          ('ctl00$c$TransactionSearchControl$ExportFormats$List', 'CSV-Extended'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$Starting$AmountControl$TransferFundsAmountTextBox', '0.00'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$Starting$AmountControl$AmountMandatoryValidator_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$Starting$AmountControl$AmountFormatValidator_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$Starting$AmountControl$AmountFormatValidator_ShowError_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$Starting$AmountControl$AmountValueValidator_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$Starting$AmountControl$AmountValueValidator_ShowError_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$TargetBalance$AmountControl$TransferFundsAmountTextBox', '0.00'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$TargetBalance$AmountControl$AmountMandatoryValidator_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$TargetBalance$AmountControl$AmountFormatValidator_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$TargetBalance$AmountControl$AmountFormatValidator_ShowError_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$TargetBalance$AmountControl$AmountValueValidator_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$TargetBalance$AmountControl$AmountValueValidator_ShowError_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$StartingAmountValidator_ErrorToggle_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$StartingAmountValidator_ErrorHighlight_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$GoalAmountValidator_ErrorToggle_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$GoalAmountValidator_ErrorHighLight_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$AccountTitleTextField', ''),
-          ('ctl00$c$AccountGoal$SaveGoalControl$customisedNameValidation_errorToggle_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$ToggleCssClassExtender1_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$DateControl$SelectedDateControl$TextBox', ''),
-          ('ctl00$c$AccountGoal$SaveGoalControl$DateControl$DateOverrideNull', ''),
-          ('ctl00$c$AccountGoal$SaveGoalControl$DateControl$DateRequiredFieldValidator_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$DateControl$DateRangeValidator_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$DateControl$DateRangeValidator_ShowError_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$DateControl$DateIsDateValidator_Highlight_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$DateControl$DateIsDateValidator_ShowError_ClientState', 'VALID'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$SelectedAccountGoalTypeField', 'Savings'),
+            ("__RequestVerificationToken", requestVerificationToken),
+            ("__EVENTTARGET", "ctl00$c$TransactionSearchControl$ActionButton"),
+            ("__EVENTARGUMENT", ""),
+            ("__LASTFOCUS", ""),
+            ("__VSTATE", vstate),
+            ("__VIEWSTATE", ""),
+            ("__EVENTVALIDATION", eventvalidation),
+            ("ctl00$c$TransactionSearchControl$AccountList", accountPath),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$initialDate$TextBox", dateFrom),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$FromDateRegex_Highlight_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$FromDateTextBoxExtender_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$FromDateRegex_ShowError_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$InitialDateNotFuture_Highlight_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$InitialDateNotFutureTextBoxExtender_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$InitialDateNotFuture_ShowError_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$FromHistoryLimit_Highlight_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$FromHistoryLimitExtender_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$FromHistoryLimit_ShowError_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$finalDate$TextBox", dateTo),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$ToDateRegex_Highlight_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$FinalDateTextBoxExtender_ClientState", "VALID",),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$ToDateRegex_ShowError_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$DateRangeValidity_Highlight_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$DateRangeValidityExtender_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$DateRangeValidity_ShowError_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$FutureDate_Highlight_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$FinalDateNotFutureExtender_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$FutureDate_ShowError_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$ToDateHistoryLimit_Highlight_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$ToDateHistoryLimitExtender_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$ToDateHistoryLimit_ShowError_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$DateRangeLimitValidator_Highlight_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$DateRangeLimitValidatorExtender_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$DateRangeLimitValidator_ShowError_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$AmountRange$TransactionAmountLowerBoundField", ""),
+            ("ctl00$c$TransactionSearchControl$AmountRange$LowerBoundRegex_Highlight_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$AmountRange$LowerBoundTextFieldExtender_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$AmountRange$LowerBoundRegex_ShowError_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$AmountRange$TransactionAmountUpperBoundField", ""),
+            ("ctl00$c$TransactionSearchControl$AmountRange$UpperBoundRegex_Highlight_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$AmountRange$UpperBoundTextFieldExtender_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$AmountRange$UpperBoundRegex_ShowError_ClientState", "VALID"),
+            ("ctl00$c$TransactionSearchControl$DWGroup", "DepositsAndWithdrawals"),
+            ("ctl00$c$TransactionSearchControl$ExportFormats$List", "CSV-Extended"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$Starting$AmountControl$TransferFundsAmountTextBox", "0.00"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$Starting$AmountControl$AmountMandatoryValidator_Highlight_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$Starting$AmountControl$AmountFormatValidator_Highlight_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$Starting$AmountControl$AmountFormatValidator_ShowError_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$Starting$AmountControl$AmountValueValidator_Highlight_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$Starting$AmountControl$AmountValueValidator_ShowError_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$TargetBalance$AmountControl$TransferFundsAmountTextBox", "0.00"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$TargetBalance$AmountControl$AmountMandatoryValidator_Highlight_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$TargetBalance$AmountControl$AmountFormatValidator_Highlight_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$TargetBalance$AmountControl$AmountFormatValidator_ShowError_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$TargetBalance$AmountControl$AmountValueValidator_Highlight_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$TargetBalance$AmountControl$AmountValueValidator_ShowError_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$StartingAmountValidator_ErrorToggle_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$StartingAmountValidator_ErrorHighlight_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$GoalAmountValidator_ErrorToggle_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$GoalAmountValidator_ErrorHighLight_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$AccountTitleTextField", ""),
+            ("ctl00$c$AccountGoal$SaveGoalControl$customisedNameValidation_errorToggle_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$ToggleCssClassExtender1_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$DateControl$SelectedDateControl$TextBox", ""),
+            ("ctl00$c$AccountGoal$SaveGoalControl$DateControl$DateOverrideNull", ""),
+            ("ctl00$c$AccountGoal$SaveGoalControl$DateControl$DateRequiredFieldValidator_Highlight_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$DateControl$DateRangeValidator_Highlight_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$DateControl$DateRangeValidator_ShowError_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$DateControl$DateIsDateValidator_Highlight_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$DateControl$DateIsDateValidator_ShowError_ClientState", "VALID"),
+            ("ctl00$c$AccountGoal$SaveGoalControl$SelectedAccountGoalTypeField", "Savings"),
         ]
-        
-        self.retRequest = self.session.post('https://www.ib.kiwibank.co.nz' + accountPath, data=data)
-    
-        self.logger.debug('CSV file :\n\n' + str(self.retRequest.content) + '\n') 
-        
+
+        self.retRequest = self.session.post(
+            "https://www.ib.kiwibank.co.nz" + accountPath, data=data
+        )
+
+        self.logger.debug("CSV file :\n\n" + str(self.retRequest.content) + "\n")
+
         ret = self.retRequest.content.decode("utf-8")
-        
-        self.logger.debug("CSV file extracted : \n" + ret) 
-        
-        return( ret )
-            
-                
-    
-    
-    
-    
-    
-    
-    def logout(self):            
-        self.session.get('https://www.ib.kiwibank.co.nz/logout/')
+
+        self.logger.debug("CSV file extracted : \n" + ret)
+
+        return ret
+
+    def logout(self):
+        self.session.get("https://www.ib.kiwibank.co.nz/logout/")
