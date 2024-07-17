@@ -22,11 +22,11 @@ if __name__ == '__main__':
                     'My mother\'s maiden name?':'duchesse d\'orléans',
                     'Another question?':'another response'
     }
-     
+
     #CSV extract informations
-    dateFrom = todayDate = '1/1/2017'
-    dateTo = todayDate = str( time.strftime("%d/%m/%YYYY"))
-    accountNum = '123456789ABCDEF123456789ABCDEF12'
+    dateFrom = todayDate = '1/6/2024'
+    dateTo = todayDate = str( time.strftime("%d/%m/%Y"))
+    accountPath = '/accounts/view/123456789ABCDEF123456789ABCDEF12'
 
     
     #Logging stuff
@@ -44,7 +44,7 @@ if __name__ == '__main__':
      
     kbApi.login(user, password)
     kbApi.resolveChallenge(questionsAnswers)
-    csvTxt = kbApi.extractCSV(accountNum, dateFrom,dateTo)
+    csvTxt = kbApi.extractCSV(accountPath, dateFrom,dateTo)
     kbApi.logout()
     
 

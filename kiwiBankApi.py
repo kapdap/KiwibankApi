@@ -18,13 +18,18 @@ class KiwiBankApi(object):
         soup = BeautifulSoup(self.retRequest.content, 'html.parser')        
         self.logger.debug(soup.prettify())        
          
+        vstate = soup.find(id="__VSTATE")['value']
+        eventvalidation = soup.find(id="__EVENTVALIDATION")['value']
+
         data = [
           ('__LASTFOCUS', ''),
           ('__EVENTTARGET', 'ctl00$c$ProgressFinalSubmit$FinalStepButton'),
           ('__EVENTARGUMENT', ''),
-          ('__VSTATE', 'nVJPT9swFF+cGEoHDdpGNIHUFqnagY2koGmj3FDFZRoc+LcLEpjYSb2mcbAfyzTxFThynNDO+0A772tsB+akTUvU7TIfnt/v/f29Z98bto2r61uvN7Y6nc23b2wH1Z+ekIhTAuyAXV4xBXuCMmQ4KLCps4hMLRFCWeDsCVf8ImI9iqxFjefJFQhfDJKIAcOmCALqVPKEGjK0tLIKeRmUY1RYl4zqQJ2lRMY8Dqm2OlbdJBHgyoehbbVuKunjFY8PSMiUx30Rn01S3JAHNOfUMDIywzYjVCmhx2P6OZwvw4WC4MxwzoJrNq11xD4DXn4vwiaPmyC0BCZjBs0LEvcz4hThjLnVkyzAKz2ARG17Xpqmbp+nPItyfeHGX7yGoaecK5rWyhzw3zY15j8Om7VHWlZpkpHb/pU61WfinCk7y0ubKzur0xt92J0+N3Hbh6jdbvmtY8XkvoBDBsfJrpRC7jGl9Bu2RrfqihikiOyQ4rUiaSdisitEn+dfkEtGp8KfvXxUo8OjVUN/Gq0F6F4fm2LvYSV4Rz6RQ1/yBP6v3A/3+7fG3dHHrzfn6+Hd6W3yZPP3q86v6+1+N9ohL37+AQ=='),
+          ('__VSTATE', vstate),
           ('__VIEWSTATE', ''),
-          ('__EVENTVALIDATION', '/wEdAASvVXD1oYELeveMr0vHCmYPPwV9PorNx6c52mq8Z4/3YxLfEa1JDlqfj8bLh3VGcfhdY6yQmR47qzW9jZRay3GEDae84IwkKPW2UM9PlBZt3bQKLvc38FHQpRk5hdtJN0k='),
+          ('__EVENTVALIDATION', eventvalidation),
+          ('ctl00$c$IESError', ''),
+          ('ctl00$c$ciam', ''),
           ('ctl00$c$txtUserName', login),
           ('ctl00$c$txtPassword', password),
         ]
@@ -97,10 +102,10 @@ class KiwiBankApi(object):
         
         
         
-    def extractCSV(self,accountNum,dateFrom,dateTo):
+    def extractCSV(self,accountPath,dateFrom,dateTo):
         self.logger.info("Extracting CSV file...") 
         #Make a first get to the account to init html page
-        self.retRequest = self.session.get('https://www.ib.kiwibank.co.nz/accounts/view/' + accountNum)
+        self.retRequest = self.session.get('https://www.ib.kiwibank.co.nz' + accountPath)
     
     
         soup = BeautifulSoup(self.retRequest.content, 'html.parser')
@@ -122,7 +127,7 @@ class KiwiBankApi(object):
           ('__VSTATE', vstate),
           ('__VIEWSTATE', ''),
           ('__EVENTVALIDATION', eventvalidation),
-          ('ctl00$c$TransactionSearchControl$AccountList', '/accounts/view/' + accountNum),
+          ('ctl00$c$TransactionSearchControl$AccountList', accountPath),
           ('ctl00$c$TransactionSearchControl$DualDateSelector$initialDate$TextBox', dateFrom),
           ('ctl00$c$TransactionSearchControl$DualDateSelector$FromDateRegex_Highlight_ClientState', 'VALID'),
           ('ctl00$c$TransactionSearchControl$DualDateSelector$FromDateTextBoxExtender_ClientState', 'VALID'),
@@ -146,6 +151,9 @@ class KiwiBankApi(object):
           ('ctl00$c$TransactionSearchControl$DualDateSelector$ToDateHistoryLimit_Highlight_ClientState', 'VALID'),
           ('ctl00$c$TransactionSearchControl$DualDateSelector$ToDateHistoryLimitExtender_ClientState', 'VALID'),
           ('ctl00$c$TransactionSearchControl$DualDateSelector$ToDateHistoryLimit_ShowError_ClientState', 'VALID'),
+          ('ctl00$c$TransactionSearchControl$DualDateSelector$DateRangeLimitValidator_Highlight_ClientState', 'VALID'),
+          ('ctl00$c$TransactionSearchControl$DualDateSelector$DateRangeLimitValidatorExtender_ClientState', 'VALID'),
+          ('ctl00$c$TransactionSearchControl$DualDateSelector$DateRangeLimitValidator_ShowError_ClientState', 'VALID'),
           ('ctl00$c$TransactionSearchControl$AmountRange$TransactionAmountLowerBoundField', ''),
           ('ctl00$c$TransactionSearchControl$AmountRange$LowerBoundRegex_Highlight_ClientState', 'VALID'),
           ('ctl00$c$TransactionSearchControl$AmountRange$LowerBoundTextFieldExtender_ClientState', 'VALID'),
@@ -156,7 +164,7 @@ class KiwiBankApi(object):
           ('ctl00$c$TransactionSearchControl$AmountRange$UpperBoundRegex_ShowError_ClientState', 'VALID'),
           ('ctl00$c$TransactionSearchControl$DWGroup', 'DepositsAndWithdrawals'),
           ('ctl00$c$TransactionSearchControl$ExportFormats$List', 'CSV-Extended'),
-          ('ctl00$c$AccountGoal$SaveGoalControl$Starting$AmountControl$TransferFundsAmountTextBox', '3540.53'),
+          ('ctl00$c$AccountGoal$SaveGoalControl$Starting$AmountControl$TransferFundsAmountTextBox', '0.00'),
           ('ctl00$c$AccountGoal$SaveGoalControl$Starting$AmountControl$AmountMandatoryValidator_Highlight_ClientState', 'VALID'),
           ('ctl00$c$AccountGoal$SaveGoalControl$Starting$AmountControl$AmountFormatValidator_Highlight_ClientState', 'VALID'),
           ('ctl00$c$AccountGoal$SaveGoalControl$Starting$AmountControl$AmountFormatValidator_ShowError_ClientState', 'VALID'),
@@ -185,7 +193,7 @@ class KiwiBankApi(object):
           ('ctl00$c$AccountGoal$SaveGoalControl$SelectedAccountGoalTypeField', 'Savings'),
         ]
         
-        self.retRequest = self.session.post('https://www.ib.kiwibank.co.nz/accounts/view/' + accountNum, data=data)
+        self.retRequest = self.session.post('https://www.ib.kiwibank.co.nz' + accountPath, data=data)
     
         self.logger.debug('CSV file :\n\n' + str(self.retRequest.content) + '\n') 
         
