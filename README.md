@@ -1,4 +1,4 @@
-# KiwiBankApi
+# KiwibankApi
 Just to manipulate and download csv export file from bank account.
 
 ## The purpose :
