@@ -8,9 +8,9 @@ class KiwibankApi(object):
 
     def __init__(self):
         self.session = requests.Session()
+        self.session.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0"})
         self.logger = logging.getLogger()
         self.retRequest = None
-        self.session.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0"})
 
     def login(self, login, password):
         self.logger.info("Login attempt...")
@@ -21,7 +21,7 @@ class KiwibankApi(object):
         except requests.RequestException as e:
             self.logger.error(f"Network error: {e}")
             raise
-        
+
         self.logger.debug(soup.prettify())
 
         vstate = soup.find(id="__VSTATE")["value"]
@@ -40,9 +40,7 @@ class KiwibankApi(object):
             ("ctl00$c$txtPassword", password),
         ]
 
-        self.retRequest = self.session.post(
-            "https://www.ib.kiwibank.co.nz/login/", data=data
-        )
+        self.retRequest = self.session.post("https://www.ib.kiwibank.co.nz/login/", data=data)
 
         soup = BeautifulSoup(self.retRequest.content, "html.parser")
         self.logger.debug(soup.prettify())
@@ -94,9 +92,7 @@ class KiwibankApi(object):
             ("letter2", letter2),
         ]
 
-        self.retRequest = self.session.post(
-            "https://www.ib.kiwibank.co.nz/keepsafe/challenge/", data=data
-        )
+        self.retRequest = self.session.post("https://www.ib.kiwibank.co.nz/keepsafe/challenge/", data=data)
 
         soup = BeautifulSoup(self.retRequest.content, "html.parser")
         self.logger.debug(soup.prettify())
@@ -113,13 +109,10 @@ class KiwibankApi(object):
         exportFormat,
     ):
         self.logger.info("Exporting statement...")
-        
-        accountUrl = '/'.join(filter(None, ["/accounts/view", accountType, accountId]))
-        
-        # Make a first get to the account to init html page
-        self.retRequest = self.session.get(
-            "https://www.ib.kiwibank.co.nz" + accountUrl
-        )
+
+        accountUrl = "/".join(filter(None, ["/accounts/view", accountType, accountId]))
+
+        self.retRequest = self.session.get("https://www.ib.kiwibank.co.nz" + accountUrl)
 
         soup = BeautifulSoup(self.retRequest.content, "html.parser")
         self.logger.debug(soup.prettify())
@@ -137,7 +130,7 @@ class KiwibankApi(object):
             ("__VIEWSTATE", ""),
             ("__EVENTVALIDATION", eventvalidation),
             ("ctl00$c$TransactionSearchControl$AccountList", accountUrl),
-            ("ctl00$c$TransactionSearchControl$DualDateSelector$initialDate$TextBox", '{dt.day}/{dt.month}/{dt.year}'.format(dt = dateFrom)),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$initialDate$TextBox", "{dt.day}/{dt.month}/{dt.year}".format(dt=dateFrom)),
             ("ctl00$c$TransactionSearchControl$DualDateSelector$FromDateRegex_Highlight_ClientState", "VALID"),
             ("ctl00$c$TransactionSearchControl$DualDateSelector$FromDateTextBoxExtender_ClientState", "VALID"),
             ("ctl00$c$TransactionSearchControl$DualDateSelector$FromDateRegex_ShowError_ClientState", "VALID"),
@@ -147,9 +140,9 @@ class KiwibankApi(object):
             ("ctl00$c$TransactionSearchControl$DualDateSelector$FromHistoryLimit_Highlight_ClientState", "VALID"),
             ("ctl00$c$TransactionSearchControl$DualDateSelector$FromHistoryLimitExtender_ClientState", "VALID"),
             ("ctl00$c$TransactionSearchControl$DualDateSelector$FromHistoryLimit_ShowError_ClientState", "VALID"),
-            ("ctl00$c$TransactionSearchControl$DualDateSelector$finalDate$TextBox", '{dt.day}/{dt.month}/{dt.year}'.format(dt = dateTo)),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$finalDate$TextBox", "{dt.day}/{dt.month}/{dt.year}".format(dt=dateTo)),
             ("ctl00$c$TransactionSearchControl$DualDateSelector$ToDateRegex_Highlight_ClientState", "VALID"),
-            ("ctl00$c$TransactionSearchControl$DualDateSelector$FinalDateTextBoxExtender_ClientState", "VALID",),
+            ("ctl00$c$TransactionSearchControl$DualDateSelector$FinalDateTextBoxExtender_ClientState", "VALID"),
             ("ctl00$c$TransactionSearchControl$DualDateSelector$ToDateRegex_ShowError_ClientState", "VALID"),
             ("ctl00$c$TransactionSearchControl$DualDateSelector$DateRangeValidity_Highlight_ClientState", "VALID"),
             ("ctl00$c$TransactionSearchControl$DualDateSelector$DateRangeValidityExtender_ClientState", "VALID"),
@@ -198,7 +191,7 @@ class KiwibankApi(object):
             ("ctl00$c$AccountGoal$SaveGoalControl$DateControl$DateIsDateValidator_ShowError_ClientState", "VALID"),
             ("ctl00$c$AccountGoal$SaveGoalControl$SelectedAccountGoalTypeField", "Savings"),
         ]
-    
+
         if accountType != "credit-card":
             data += [
                 ("ctl00$c$AccountGoal$SaveGoalControl$AccountTitleTextField", ""),
@@ -207,7 +200,7 @@ class KiwibankApi(object):
             ]
 
         self.retRequest = self.session.post("https://www.ib.kiwibank.co.nz" + accountUrl, data=data)
-        
+
         return self.retRequest.content.decode("utf-8")
 
     def logout(self):

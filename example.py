@@ -3,7 +3,17 @@ from kiwibank_api import KiwibankApi
 import datetime
 
 class Account:
-    def __init__(self, Id=None, AccountType=None, DateFrom=None, DateTo=None, AmountLow=None, AmountHigh=None, ExportInclude=None, ExportFormat=None):
+    def __init__(
+        self,
+        Id=None,
+        AccountType=None,
+        DateFrom=None,
+        DateTo=None,
+        AmountLow=None,
+        AmountHigh=None,
+        ExportInclude=None,
+        ExportFormat=None,
+    ):
         self.Id = Id
         self.AccountType = AccountType
         self.DateFrom = DateFrom
@@ -14,9 +24,11 @@ class Account:
         self.ExportFormat = ExportFormat
 
     def __str__(self):
-        return (f"Account(Id={self.Id}, AccountType={self.AccountType}, DateFrom={self.DateFrom}, DateTo={self.DateTo}, "
-                f"AmountLow={self.AmountLow}, AmountHigh={self.AmountHigh}, ExportInclude={self.ExportInclude}, "
-                f"ExportFormat={self.ExportFormat})")
+        return (
+            f"Account(Id={self.Id}, AccountType={self.AccountType}, DateFrom={self.DateFrom}, DateTo={self.DateTo}, "
+            f"AmountLow={self.AmountLow}, AmountHigh={self.AmountHigh}, ExportInclude={self.ExportInclude}, "
+            f"ExportFormat={self.ExportFormat})"
+        )
 
 if __name__ == "__main__":
 
@@ -34,13 +46,13 @@ if __name__ == "__main__":
     accounts = [
         Account(
             Id = "123456789ABCDEF123456789ABCDEF12",
-            AccountType = "", # Empty string for standard accounts or "credit-card" for credit card accounts
+            AccountType = "",  # Empty string for standard accounts or "credit-card" for credit card accounts
             DateFrom = datetime.datetime(2024, 6, 1),
             DateTo = datetime.datetime.today(),
             AmountLow = "",
             AmountHigh = "",
-            ExportInclude = "DepositsAndWithdrawals", # DepositsAndWithdrawals, WithdrawalsOnly, DepositsOnly
-            ExportFormat = "OFX" # CSV-Extended, CSV-Basic, OFX, OFC, QIF, PDF-Extended, PDF-Basic
+            ExportInclude = "DepositsAndWithdrawals",  # DepositsAndWithdrawals, WithdrawalsOnly, DepositsOnly
+            ExportFormat = "OFX"  # CSV-Extended, CSV-Basic, OFX, OFC, QIF, PDF-Extended, PDF-Basic
         ),
         Account(
             Id = "123456789ABCDEF123456789ABCDEF13",
@@ -54,11 +66,21 @@ if __name__ == "__main__":
         )
     ]
 
+    formats = {
+        "CSV-Extended": "csv",
+        "CSV-Basic": "csv",
+        "OFX": "ofx",
+        "OFC": "ofc",
+        "QIF": "qif",
+        "PDF-Extended": "pdf",
+        "PDF-Basic": "pdf"
+    }
+
     kbApi = KiwibankApi()
 
     kbApi.login(user, password)
     kbApi.resolveChallenge(questionsAnswers)
-    
+
     for account in accounts:
         exportData = kbApi.exportStatement(
             account.Id,
@@ -70,18 +92,7 @@ if __name__ == "__main__":
             account.ExportInclude,
             account.ExportFormat
         )
-        
-        # KeepSafe challenge
-        formats = {
-            "CSV-Extended": "csv",
-            "CSV-Basic": "csv",
-            "OFX": "ofx",
-            "OFC": "ofc",
-            "QIF": "qif",
-            "PDF-Extended": "pdf",
-            "PDF-Basic": "pdf",
-        }
-        
+
         fileName = "_".join(
             filter(
                 None,
@@ -96,7 +107,7 @@ if __name__ == "__main__":
                 ],
             )
         ).replace(".", "_") + "." + formats[account.ExportFormat]
-        
+
         fileData = "\n".join(exportData.splitlines())
 
         with open(fileName, "w") as exportFile:
